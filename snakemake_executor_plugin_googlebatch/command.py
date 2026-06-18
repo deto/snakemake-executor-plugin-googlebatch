@@ -22,8 +22,8 @@ cat <<EOF > /tmp/workdir/entrypoint.sh
 %s
 
 # https://github.com/boto/botocore/issues/3111
-python3 -m pip install boto3==1.33.11
-python3 -m pip install urllib3==1.26.17
+# python3 -m pip install boto3==1.33.11
+# python3 -m pip install urllib3==1.26.17
 EOF
 chmod +x /tmp/workdir/entrypoint.sh
 cat /tmp/workdir/entrypoint.sh
