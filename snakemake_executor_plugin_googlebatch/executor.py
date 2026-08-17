@@ -4,6 +4,8 @@ import time
 import uuid
 
 from typing import List
+
+import google.auth
 from snakemake_interface_common.exceptions import WorkflowError
 from snakemake_interface_executor_plugins.executors.base import SubmittedJobInfo
 from snakemake_interface_executor_plugins.executors.remote import RemoteExecutor
@@ -46,7 +48,10 @@ class GoogleBatchExecutor(RemoteExecutor):
 
         # There is an async client but I'm not sure we'd get much benefit
         try:
-            self.batch = batch_v1.BatchServiceClient()
+            credentials, _ = google.auth.default(
+                quota_project_id=self.executor_settings.project
+            )
+            self.batch = batch_v1.BatchServiceClient(credentials=credentials)
         except Exception as e:
             raise WorkflowError("Unable to connect to Google Batch.", e)
 
@@ -566,7 +571,13 @@ class GoogleBatchExecutor(RemoteExecutor):
         filter_query = f"labels.job_uid={job_uid}"
         logfname = job_info.aux["logfile"]
 
-        log_client = logging.Client(project=self.executor_settings.project)
+        credentials, _ = google.auth.default(
+            quota_project_id=self.executor_settings.project
+        )
+        log_client = logging.Client(
+            project=self.executor_settings.project,
+            credentials=credentials,
+        )
         logger = log_client.logger("batch_task_logs")
 
         def attempt_log_save(fname, logger, query, page_size):

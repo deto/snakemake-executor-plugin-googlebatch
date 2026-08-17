@@ -1,4 +1,6 @@
 import shlex
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 import pytest
 from snakemake_interface_common.exceptions import WorkflowError
@@ -9,6 +11,7 @@ from snakemake_executor_plugin_googlebatch import (
     common_settings,
 )
 from snakemake_executor_plugin_googlebatch.executor import (
+    GoogleBatchExecutor,
     PIP_DEPLOYMENTS_PATH,
     get_storage_plugin_bootstrap,
 )
@@ -39,3 +42,35 @@ def test_bootstrap_installs_into_snakemake_deployment_directory():
 def test_bootstrap_rejects_empty_override():
     with pytest.raises(WorkflowError, match="storage_plugin_spec"):
         get_storage_plugin_bootstrap("")
+
+
+def test_log_client_uses_executor_project_as_quota_project(tmp_path):
+    executor = object.__new__(GoogleBatchExecutor)
+    executor.executor_settings = SimpleNamespace(project="analysis-pipelines")
+    executor.logger = MagicMock()
+    job_info = MagicMock(
+        aux={
+            "batch_job": SimpleNamespace(uid="job-uid"),
+            "logfile": str(tmp_path / "job.log"),
+        }
+    )
+    credentials = MagicMock()
+    cloud_logger = MagicMock()
+    cloud_logger.list_entries.return_value = []
+
+    with (
+        patch(
+            "snakemake_executor_plugin_googlebatch.executor.google.auth.default",
+            return_value=(credentials, "credential-project"),
+        ) as default_credentials,
+        patch(
+            "snakemake_executor_plugin_googlebatch.executor.logging.Client"
+        ) as logging_client,
+    ):
+        logging_client.return_value.logger.return_value = cloud_logger
+        executor.save_finished_job_logs(job_info)
+
+    default_credentials.assert_called_once_with(quota_project_id="analysis-pipelines")
+    logging_client.assert_called_once_with(
+        project="analysis-pipelines", credentials=credentials
+    )
