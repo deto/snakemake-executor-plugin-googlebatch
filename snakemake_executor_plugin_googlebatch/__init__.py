@@ -13,7 +13,7 @@ urllib3.disable_warnings()
 DEFAULT_GCS_STORAGE_PLUGIN_SPEC = (
     "snakemake-storage-plugin-gcs @ "
     "https://github.com/deto/snakemake-storage-plugin-gcs/archive/"
-    "b8b6505f09ff7aa679b76eb6c6fcb15100d36cc2.zip"
+    "b77bc2cece5cad1fa0d367270accde5ec4480666.zip"
 )
 
 

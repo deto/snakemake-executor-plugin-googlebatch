@@ -18,7 +18,7 @@ def test_storage_plugin_default_is_exact_commit():
     settings = ExecutorSettings(project="test", region="us-central1")
 
     assert settings.storage_plugin_spec == DEFAULT_GCS_STORAGE_PLUGIN_SPEC
-    assert "b8b6505f09ff7aa679b76eb6c6fcb15100d36cc2" in settings.storage_plugin_spec
+    assert "b77bc2cece5cad1fa0d367270accde5ec4480666" in settings.storage_plugin_spec
 
 
 def test_core_storage_plugin_auto_deployment_is_disabled():
