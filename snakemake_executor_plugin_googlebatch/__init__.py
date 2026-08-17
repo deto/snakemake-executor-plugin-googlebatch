@@ -10,6 +10,12 @@ import urllib3
 
 urllib3.disable_warnings()
 
+DEFAULT_GCS_STORAGE_PLUGIN_SPEC = (
+    "snakemake-storage-plugin-gcs @ "
+    "https://github.com/deto/snakemake-storage-plugin-gcs/archive/"
+    "b8b6505f09ff7aa679b76eb6c6fcb15100d36cc2.zip"
+)
+
 
 # Optional:
 # Define additional settings for your executor.
@@ -239,6 +245,16 @@ class ExecutorSettings(ExecutorSettingsBase):
         },
     )
 
+    storage_plugin_spec: Optional[str] = field(
+        default=DEFAULT_GCS_STORAGE_PLUGIN_SPEC,
+        metadata={
+            "help": "Pinned pip requirement used to install the GCS storage plugin "
+            "inside each Batch job",
+            "env_var": False,
+            "required": False,
+        },
+    )
+
 
 # Required:
 # Common settings shared by various executors.
@@ -252,5 +268,5 @@ common_settings = CommonSettings(
     job_deploy_sources=True,
     pass_default_storage_provider_args=True,
     pass_default_resources_args=True,
-    auto_deploy_default_storage_provider=True,
+    auto_deploy_default_storage_provider=False,
 )

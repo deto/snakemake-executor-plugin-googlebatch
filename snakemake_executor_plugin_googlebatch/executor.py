@@ -1,4 +1,5 @@
 import os
+import shlex
 import time
 import uuid
 
@@ -14,6 +15,28 @@ import snakemake_executor_plugin_googlebatch.command as cmdutil
 
 from google.api_core.exceptions import DeadlineExceeded, ResourceExhausted
 from google.cloud import batch_v1, logging
+
+PIP_DEPLOYMENTS_PATH = ".snakemake/pip-deployments"
+
+
+def get_storage_plugin_bootstrap(spec):
+    """Build the command that installs and verifies the remote GCS plugin."""
+    if not spec:
+        raise WorkflowError(
+            "googlebatch storage_plugin_spec must name an installable GCS plugin"
+        )
+    requirement = shlex.quote(spec)
+    verification = shlex.quote(
+        "from importlib.metadata import version; "
+        "import snakemake_storage_plugin_gcs as plugin; "
+        "print('GCS storage plugin:', version('snakemake-storage-plugin-gcs'), "
+        "plugin.__file__)"
+    )
+    return (
+        f"python -m pip install --disable-pip-version-check --upgrade "
+        f"--target {PIP_DEPLOYMENTS_PATH} {requirement} && "
+        f"PYTHONPATH={PIP_DEPLOYMENTS_PATH} python -c {verification}"
+    )
 
 
 class GoogleBatchExecutor(RemoteExecutor):
@@ -163,7 +186,10 @@ class GoogleBatchExecutor(RemoteExecutor):
         Get a command writer for a job.
         """
         family = self.get_param(job, "image_family")
-        command = self.format_job_exec(job)
+        bootstrap = get_storage_plugin_bootstrap(
+            self.executor_settings.storage_plugin_spec
+        )
+        command = f"{bootstrap} && {self.format_job_exec(job)}"
         snakefile = self.read_snakefile()
 
         # Any custom snippets

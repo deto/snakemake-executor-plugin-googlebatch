@@ -10,6 +10,15 @@ For documentation, see the [Snakemake plugin catalog](https://snakemake.github.i
 
 For examples, look into the [examples](examples) directory.
 
+### GCS storage plugin bootstrap
+
+Each remote job installs a pinned GCS storage-plugin fork into Snakemake's
+`.snakemake/pip-deployments` directory before source and input staging begins.
+This replaces Snakemake's unpinned automatic storage-plugin deployment and makes
+the concurrent large-object download implementation available during staging.
+Override the pip requirement with `--googlebatch-storage-plugin-spec`; the default
+is an exact commit archive from `deto/snakemake-storage-plugin-gcs`.
+
 ## Developer
 
 The instructions for creating and scaffolding this plugin are [here](https://github.com/snakemake/poetry-snakemake-plugin#scaffolding-an-executor-plugin).
